@@ -10,6 +10,8 @@ namespace SGFBackend.Helpers
         {
             CreateMap<Categoria, CategoriaGet>();
             CreateMap<CategoriaCreate, Categoria>();
+            CreateMap<Exercicio, ExercicioGet>();
+            CreateMap<ExercicioCreate, Exercicio>();
         }
     }
 }
