@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using SGFBackend.Entities;
 using SGFBackend.Helpers;
 
@@ -39,7 +40,8 @@ namespace SGFBackend
             services.Configure<SecretKeyConfig>(Configuration); 
             // Acesso dos dados no contexto (user_id) 
             services.AddHttpContextAccessor(); 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson( 
+                opt => opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore); 
             services.AddAuthentication(x =>  
             { 
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
@@ -58,7 +60,7 @@ namespace SGFBackend
                 }; 
             }); 
             services.AddDbContext<SgfContext>(options =>  
-                options.UseMySql(databaseConfig.ConnectionString));
+                 options.UseLazyLoadingProxies().UseMySql(databaseConfig.ConnectionString)); 
              // Configuração do Mapper 
             services.AddAutoMapper(typeof(MapperProfile)); 
         }
