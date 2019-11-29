@@ -1,10 +1,15 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using SGFBackend.Entities;
+using SGFBackend.Helpers;
 using SGFBackend.Models;
 
 namespace SGFBackend.Controllers
@@ -15,11 +20,13 @@ namespace SGFBackend.Controllers
     {
         private SgfContext _context;
         private IMapper _mapper;
+        private SecretKeyConfig _secret;
 
-        public UserController(SgfContext context, IMapper mapper)
+        public UserController(SgfContext context, IMapper mapper, IOptions<SecretKeyConfig> options)
         {
             _context = context;
             _mapper = mapper;
+            _secret = options.Value;
         }
 
         private User CreateUser(User u)
@@ -34,6 +41,62 @@ namespace SGFBackend.Controllers
             _context.Users.Add(u);
             _context.SaveChanges();
             return u;
+        }
+
+        private bool CheckPassword(string plainPassword, string password, string salt)
+        {
+            var plainBytes = Encoding.UTF8.GetBytes(plainPassword);
+            var passwordBytes = Convert.FromBase64String(password);
+            using (var hasher = new HMACSHA256(Convert.FromBase64String(salt)))
+            {
+                var hash = hasher.ComputeHash(plainBytes);
+                for (int i = 0; i < hash.Length; i ++)
+                {
+                    if (hash[i] != passwordBytes[i])
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private string GerarToken(int id, string role)
+        {
+            var key = _secret.SecretKeyBytes;
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, id.ToString()),
+                    new Claim(ClaimTypes.Role, role)
+                }),
+                Expires = DateTime.UtcNow.AddHours(6),
+                SigningCredentials = new SigningCredentials(
+                        new SymmetricSecurityKey(key), 
+                        SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return tokenString;
+        }
+
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] UserLogin u)
+        {
+            User user = _context.Users.SingleOrDefault(us => us.Username.Equals(u.Username));
+            if (user != null)
+            {
+                if (CheckPassword(u.Password, user.Password, user.Salt))
+                {
+                    var token = new AccessToken { Token = GerarToken(user.Iduser, user.Role) };
+                    return Ok(token);
+                }
+            }
+            return Unauthorized(new { message = "Username ou Password inválidos" });
         }
 
         [HttpPost("aluno")]
