@@ -12,6 +12,7 @@ namespace SGFBackend.Helpers
             CreateMap<CategoriaCreate, Categoria>();
             CreateMap<Exercicio, ExercicioGet>();
             CreateMap<ExercicioCreate, Exercicio>();
+            CreateMap<UserCreate, User>();
         }
     }
 }
