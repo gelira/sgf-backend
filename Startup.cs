@@ -59,6 +59,10 @@ namespace SGFBackend
                     ValidateAudience = false 
                 }; 
             }); 
+            services.AddAuthorization(options => 
+            { 
+                options.AddPolicy("Professores", policy => policy.RequireRole("Professor"));
+            });
             services.AddDbContext<SgfContext>(options =>  
                  options.UseLazyLoadingProxies().UseMySql(databaseConfig.ConnectionString)); 
              // Configuração do Mapper 
