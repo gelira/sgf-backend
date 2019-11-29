@@ -13,6 +13,9 @@ namespace SGFBackend.Helpers
             CreateMap<Exercicio, ExercicioGet>();
             CreateMap<ExercicioCreate, Exercicio>();
             CreateMap<UserCreate, User>();
+            CreateMap<ExercicioAlunoCreate, ExerciciosAluno>();
+            CreateMap<ExerciciosAluno, ExercicioAlunoGet>()
+                .ForMember(dest => dest.Exercicio, opts => opts.MapFrom(src => src.IdexercicioNavigation.Nome));
         }
     }
 }
