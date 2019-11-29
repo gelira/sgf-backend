@@ -5,6 +5,8 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -21,12 +23,16 @@ namespace SGFBackend.Controllers
         private SgfContext _context;
         private IMapper _mapper;
         private SecretKeyConfig _secret;
+        private int userId;
 
-        public UserController(SgfContext context, IMapper mapper, IOptions<SecretKeyConfig> options)
+        public UserController(
+            SgfContext context, IMapper mapper, 
+            IOptions<SecretKeyConfig> options, IHttpContextAccessor http)
         {
             _context = context;
             _mapper = mapper;
             _secret = options.Value;
+            userId = (new IdUserExtractor(http)).IdUser;
         }
 
         private User CreateUser(User u)
@@ -114,6 +120,7 @@ namespace SGFBackend.Controllers
         }
 
         [HttpPut("aluno/{id}")]
+        [Authorize(Policy = "Professores")]
         public IActionResult UpdateAluno(int id, [FromBody] AlunoUpdate a)
         {
             Aluno aluno = _context.Alunos.SingleOrDefault(al => al.Idaluno == id);
@@ -144,10 +151,11 @@ namespace SGFBackend.Controllers
             return Ok(new { message = "Professor criado" });
         }
 
-        [HttpPut("professor/{id}")]
-        public IActionResult UpdateProfessor(int id, [FromBody] ProfessorUpdate p)
+        [HttpPut("professor")]
+        [Authorize(Policy = "Professores")]
+        public IActionResult UpdateProfessor([FromBody] ProfessorUpdate p)
         {
-            Professor prof = _context.Professores.SingleOrDefault(pr => pr.Idprofessor == id);
+            Professor prof = _context.Professores.SingleOrDefault(pr => pr.Idprofessor == userId);
             if (prof == null)
             {
                 return NotFound(new { message = "Professor not found" });
