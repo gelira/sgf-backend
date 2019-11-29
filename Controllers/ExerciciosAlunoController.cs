@@ -42,5 +42,17 @@ namespace SGFBackend.Controllers
             var retorno = _mapper.Map<List<ExercicioAlunoGet>>(exercicios);
             return Ok(retorno);
         }
+
+        [HttpGet("categoria/{id}")]
+        [Authorize(Policy = "Alunos")]
+        public IActionResult ListExerciciosCategoriaAluno(int id)
+        {
+            var exercicios = _context.ExerciciosAluno
+                .Where(ea => ea.Idaluno == userId)
+                .Where(ea => ea.IdexercicioNavigation.Idcategoria == id)
+                .ToList();
+            var retorno = _mapper.Map<List<ExercicioAlunoGet>>(exercicios);
+            return Ok(retorno);
+        }
     }
 }

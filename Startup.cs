@@ -62,6 +62,7 @@ namespace SGFBackend
             services.AddAuthorization(options => 
             { 
                 options.AddPolicy("Professores", policy => policy.RequireRole("Professor"));
+                options.AddPolicy("Alunos", policy => policy.RequireRole("Aluno"));
             });
             services.AddDbContext<SgfContext>(options =>  
                  options.UseLazyLoadingProxies().UseMySql(databaseConfig.ConnectionString)); 
