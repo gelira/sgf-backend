@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
@@ -10,7 +11,14 @@ namespace SGFBackend.Helpers
 
         public IdUserExtractor(IHttpContextAccessor http)
         {
-            idUser = int.Parse(http.HttpContext.User.FindFirst(ClaimTypes.Name).Value);
+            try
+            {
+                idUser = int.Parse(http.HttpContext.User.FindFirst(ClaimTypes.Name).Value);
+            }
+            catch (Exception)
+            {
+                idUser = 0;
+            }
         }
     }
 }
